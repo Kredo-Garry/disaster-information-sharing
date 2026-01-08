@@ -1,25 +1,34 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class AdminAuthController extends Controller
+class AuthController extends Controller
 {
-    // 管理者ログインフォーム
     public function showLoginForm()
     {
-        return view('admin.login');
+        return view('admin.auth.login');
     }
 
-    // 管理者ログイン処理
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
-        $credentials['is_admin'] = 1; // 管理者限定
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
 
         if (Auth::attempt($credentials)) {
+
+            if (auth()->user()->role !== 'admin') {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => '管理者権限がありません。',
+                ]);
+            }
+
             $request->session()->regenerate();
             return redirect()->route('admin.dashboard');
         }
@@ -29,10 +38,10 @@ class AdminAuthController extends Controller
         ]);
     }
 
-    // 管理者ログアウト
     public function logout(Request $request)
     {
         Auth::logout();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
