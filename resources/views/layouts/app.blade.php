@@ -15,22 +15,23 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div class="min-h-screen bg-gray-100">
+
+            {{-- ナビは一番上 --}}
             @include('layouts.navigation')
 
-            <!-- Page Heading -->
             @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <header class="bg-white shadow">
+                    <div class="max-w-7xl mx-auto py-6 px-4">
                         {{ $header }}
                     </div>
                 </header>
             @endisset
 
-            <!-- Page Content -->
-            <main class="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-                {{ $slot }}
+            <main class="max-w-7xl mx-auto px-4 py-6">
+                @yield('content')
             </main>
+
         </div>
     </body>
 </html>
