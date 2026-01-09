@@ -15,7 +15,10 @@ class AdminDashboardController extends Controller
             'userCount'     => User::count(),
             'postCount'     => Post::count(),
             'categoryCount' => Category::count(),
-            'users'         => User::latest()->limit(5)->get(),
+            // ★ ここを 'users' から 'latestUsers' に変更
+            'latestUsers'   => User::latest()->limit(5)->get(), 
+            // ★ Blade側で $latestPosts も使っているので追加
+            'latestPosts'   => Post::with('user')->latest()->limit(5)->get(), 
         ]);
     }
 }
