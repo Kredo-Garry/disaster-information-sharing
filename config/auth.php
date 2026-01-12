@@ -39,7 +39,13 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+
+        // ここを追記
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins', // 次の providers で設定する名前
         ],
+            ],
     ],
 
     /*
@@ -63,7 +69,13 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+
+        // ここを追記
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class, // 管理者もUserテーブルを使うならこれでOK
         ],
+            ],
 
         // 'users' => [
         //     'driver' => 'database',
