@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Admin; // ★ここが重要
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -21,30 +21,22 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-
-            if (auth()->user()->role !== 'admin') {
+            if (!auth()->user()->is_admin) {
                 Auth::logout();
-                return back()->withErrors([
-                    'email' => '管理者権限がありません。',
-                ]);
+                return back()->withErrors(['email' => '管理者権限がありません。']);
             }
-
             $request->session()->regenerate();
             return redirect()->route('admin.dashboard');
         }
 
-        return back()->withErrors([
-            'email' => 'ログイン情報が正しくありません。',
-        ]);
+        return back()->withErrors(['email' => 'ログイン情報が正しくありません。']);
     }
 
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
         return redirect()->route('admin.login');
     }
 }

@@ -2,31 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\AdminAuthController;
-use App\Http\Controllers\Admin\AdminDashboardController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
+// 公開ページ
+Route::get('/', function () { return view('welcome'); });
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-/*
-|--------------------------------------------------------------------------
-| User routes
-|--------------------------------------------------------------------------
-*/
-
-// 一般ユーザー用ダッシュボード
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-// プロフィール編集
+// プロフィール
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -56,3 +36,10 @@ Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(
 });
 
 require __DIR__.'/auth.php';
+
+// ★ これを追加！ 
+// auth.php や他の部品が「dashboard」という名前を探した時に、
+// エラーを出さずに管理画面のダッシュボードへ案内する設定です。
+Route::get('/dashboard', function () {
+    return redirect()->route('admin.dashboard');
+})->name('dashboard');
