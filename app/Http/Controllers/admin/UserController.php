@@ -15,8 +15,8 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
-    // 編集画面
-    public function edit(User user)
+    // 編集画面 
+    public function edit(User $user)
     {
         return view('admin.users.edit', compact('user'));
     }
