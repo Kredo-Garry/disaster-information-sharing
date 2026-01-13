@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
+            $table->string('name'); // 例: 電気, 水道, Wi-Fi
+            $table->string('icon_type'); // 例: lightbulb, tap, wifi
+            $table->string('color'); // 例: yellow, blue, green (地図上の色)
             $table->timestamps();
         });
     }
