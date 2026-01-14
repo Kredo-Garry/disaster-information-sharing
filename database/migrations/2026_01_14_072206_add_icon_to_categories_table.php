@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name'); // ← これがあるか確認！
-            $table->text('description')->nullable(); // 先ほど追加した説明文用
-            $table->timestamps();
+        Schema::table('categories', function (Blueprint $table) {
+            $table->string('icon')->nullable()->after('name'); // ここを追加
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::table('categories', function (Blueprint $table) {
+            //
+        });
     }
 };

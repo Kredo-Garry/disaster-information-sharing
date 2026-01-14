@@ -8,36 +8,31 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    // 一覧表示
     public function index()
     {
         $users = User::latest()->paginate(10);
         return view('admin.users.index', compact('users'));
     }
 
-    // 編集画面 
+    // ★ この edit メソッドが足りないためエラーが出ています
     public function edit(User $user)
     {
+        // 編集画面を表示する
         return view('admin.users.edit', compact('user'));
     }
 
-    // 更新処理
+    // 更新処理もセットで必要になるはずなので追加しておきます
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            // パスワード変更が必要な場合などはここに追加
         ]);
 
         $user->update($validated);
 
-        return redirect()->route('admin.users.index')->with('success', 'ユーザー情報を更新しました');
-    }
-
-    // 削除処理
-    public function destroy(User $user)
-    {
-        $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'ユーザーを削除しました');
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User updated successfully.');
     }
 }
