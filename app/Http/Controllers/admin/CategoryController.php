@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    // 一覧表示
+    /**
+     * Display a listing of the categories.
+     */
     public function index()
     {
         return view('admin.categories.index', [
@@ -16,24 +18,53 @@ class CategoryController extends Controller
         ]);
     }
 
-    // ★ここが足りなかったためにエラーが出ていました
+    /**
+     * Show the form for creating a new category.
+     */
     public function create()
     {
-        // 登録画面を表示する
         return view('admin.categories.create');
     }
 
-    // 保存処理 (後で必要になるので一緒に入れておきます)
+    /**
+     * Store a newly created category in storage.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            // 他に必要なバリデーションがあれば追加
+            'icon' => 'nullable|string|max:255', // ここを追加
+            'description' => 'nullable|string',
         ]);
 
         Category::create($validated);
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'カテゴリを登録しました');
+            ->with('success', 'Category created successfully!');
+    }
+
+    /**
+     * Show the form for editing the specified category.
+     */
+    public function edit(Category $category)
+    {
+        return view('admin.categories.edit', compact('category'));
+    }
+
+    /**
+     * Update the specified category in storage.
+     */
+    public function update(Request $request, Category $category)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'icon' => 'nullable|string|max:255', // アイコン項目を追加
+            'description' => 'nullable|string',
+        ]);
+
+        $category->update($validated);
+
+        return redirect()->route('admin.categories.index')
+            ->with('success', 'Category updated successfully!');
     }
 }
