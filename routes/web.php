@@ -47,7 +47,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// 一般的なダッシュボードURLへのアクセスを管理画面へリダイレクト
-Route::get('/dashboard', function () {
-    return redirect()->route('admin.dashboard');
-})->name('dashboard');
+    // 一般ユーザー用のダッシュボードルートを追加
+    // これにより、User Login 後のリダイレクト先が正しく表示されます
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->middleware(['auth', 'verified'])->name('dashboard');
+
+    // 管理画面への強制リダイレクトは不要になったので、コメントアウトのままでOKです
+    // Route::get('/dashboard', function () {
+    //     return redirect()->route('admin.dashboard');
+    // })->name('dashboard');
