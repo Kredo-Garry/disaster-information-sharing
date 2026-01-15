@@ -33,10 +33,10 @@
                     <p class="text-3xl font-bold text-gray-800">{{ $postCount ?? 0 }}</p>
                 </div>
             </div>
-            <a href="{{ route('admin.posts.index') }}" class="text-xs text-green-500 mt-4 block hover:underline italic">View all posts →</a>
+            <a href="#" class="text-xs text-green-500 mt-4 block hover:underline italic">View all posts (Coming Soon) →</a>
         </div>
 
-        {{-- Categories --}}
+        {{-- Categories (ここを修正しました) --}}
         <div class="bg-white rounded-xl shadow-md border-l-4 border-yellow-500 p-6 hover:shadow-lg transition-shadow">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
