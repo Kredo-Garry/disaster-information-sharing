@@ -22,13 +22,27 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
+    /**
+     * Handle an incoming authentication request.
+     */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // ログインしたユーザー情報を取得
+        $user = Auth::user();
+
+        // 画像のDB構造に基づき、is_admin カラムの値で判定
+        if ($user->is_admin === 1) {
+            // 管理者の場合：LaravelのAdminダッシュボードへ
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+
+        // 一般ユーザー（is_admin が 0）の場合：React側のページへ
+        // ※ReactのURLが異なる場合は、このURLを修正してください
+        return redirect()->away('http://localhost:3000/home');
     }
 
     /**
