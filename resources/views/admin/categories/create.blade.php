@@ -31,10 +31,13 @@
         </div>
 
         {{-- ここから追加：アイコン入力欄 --}}
-        <div style="margin-top: 15px;">
-            <label for="icon">Icon Name (Lucide/FontAwesome):</label><br>
-            <input type="text" id="icon" name="icon" value="{{ old('icon') }}" placeholder="e.g. wifi, flame, alert-triangle">
-            <p style="font-size: 0.8rem; color: #666;">※WiFiマークにするには「<strong>wifi</strong>」と入力してください</p>
+        {{-- Icon Name の入力項目の下にある説明文を修正 --}}
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2">Icon Name (Lucide/FontAwesome):</label>
+            <input type="text" name="icon" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g. wifi, water, flame">
+            <p class="text-xs text-gray-500 mt-1">
+                ※WiFiマークにするには「<strong>wifi</strong>」、断水マークにするには「<strong>water</strong>」と入力してください
+            </p>
         </div>
         {{-- ここまで追加 --}}
 
