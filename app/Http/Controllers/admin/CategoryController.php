@@ -67,4 +67,14 @@ class CategoryController extends Controller
         return redirect()->route('admin.categories.index')
             ->with('success', 'Category updated successfully!');
     }
+
+    public function destroy(Category $category)
+    {
+        // カテゴリを削除
+        $category->delete();
+
+        // 一覧画面に戻って、メッセージを表示
+        return redirect()->route('admin.categories.index')
+            ->with('success', 'Category deleted successfully!');
+    }
 }
