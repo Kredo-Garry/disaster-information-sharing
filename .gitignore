@@ -3,6 +3,11 @@
 .env
 .env.backup
 .env.production
+
+# frontend env (React / CRA)
+frontend/.env
+frontend/.env.*
+
 .phpactor.json
 .phpunit.result.cache
 /.fleet
