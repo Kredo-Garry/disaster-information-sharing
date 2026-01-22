@@ -1,4 +1,4 @@
-import "./builder-registry";
+import "./builder/setup";
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import BuilderPage from './BuilderPage';
 
