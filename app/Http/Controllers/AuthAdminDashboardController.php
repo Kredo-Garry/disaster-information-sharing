@@ -15,22 +15,13 @@ class AdminDashboardController extends Controller
      */
     public function index()
     {
-        // Fetch counts for the statistics cards
-        $userCount = User::count();
-        $postCount = Post::count();
-        $categoryCount = Category::count();
-
-        // Fetch latest data for the tables (English variable names)
-        $latestUsers = User::latest()->limit(5)->get();
-        $latestPosts = Post::with('user')->latest()->limit(5)->get();
-
-        // Pass variables to the view
-        return view('admin.dashboard', compact(
-            'userCount', 
-            'postCount', 
-            'categoryCount', 
-            'latestUsers', 
-            'latestPosts'
-        ));
+        return view('admin.dashboard', [
+            'userCount'     => \App\Models\User::count(),
+            'postCount'     => 0, // 投稿機能がないので 0 固定
+            'categoryCount' => \App\Models\Category::count(),
+            'latestUsers'   => \App\Models\User::latest()->limit(5)->get(), 
+            // 投稿データは空の「コレクション」を渡して、ループでエラーが出ないようにする
+            'latestPosts'   => collect(), 
+        ]);
     }
 }
