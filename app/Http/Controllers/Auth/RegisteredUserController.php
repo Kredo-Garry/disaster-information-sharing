@@ -32,30 +32,29 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'account_name' => ['required', 'string', 'max:255'], // ✅ 追加
+            'phone' => ['nullable', 'string', 'max:20'],       // ✅ 追加
+            'birth_date' => ['nullable', 'date'],             // ✅ 追加
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'account_name' => $request->account_name, // ✅ 追加
+            'phone' => $request->phone,               // ✅ 追加
+            'birth_date' => $request->birth_date,     // ✅ 追加
             'password' => Hash::make($request->password),
-            // もしデフォルトで一般ユーザーにするならここでroleを指定してもOK
-            // 'is_admin' => false, 
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        // ✅ リダイレクト先を分岐
         if ($user->is_admin) {
-            // 管理者の場合はLaravel内のダッシュボードへ
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // 一般ユーザーの場合はReact側のフロントエンドへ飛ばす
-        // 管理者画面のセッションを持たせたくないなら、ここでAuth::logout()しても良いですが、
-        // React側でAPIを使うならログイン状態のまま飛ばすのが一般的だにょ
         return redirect()->away('http://localhost:3000/home');
     }
     
