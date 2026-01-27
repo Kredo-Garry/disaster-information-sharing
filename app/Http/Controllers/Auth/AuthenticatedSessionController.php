@@ -25,6 +25,8 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
+    // app/Http/Controllers/Auth/AuthenticatedSessionController.php
+
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
@@ -32,16 +34,16 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         // ログインしたユーザー情報を取得
-        $user = Auth::user();
+        $user = $request->user();
 
-        // 画像のDB構造に基づき、is_admin カラムの値で判定
-        if ($user->is_admin === 1) {
-            // 管理者の場合：LaravelのAdminダッシュボードへ
-            return redirect()->intended(route('dashboard', absolute: false));
+        // Role（役割）によってリダイレクト先を分岐
+        // ※DBに 'role' カラムがある前提です
+        if ($user->role === 'admin') {
+            // 管理者はローカルのダッシュボードへ
+            return redirect()->intended('http://127.0.0.1:8000/admin/dashboard');
         }
 
-        // 一般ユーザー（is_admin が 0）の場合：React側のページへ
-        // ※ReactのURLが異なる場合は、このURLを修正してください
+        // 一般ユーザーは別ドメイン（React等）のフロントエンドへ強制移動
         return redirect()->away('http://localhost:3000/home');
     }
 

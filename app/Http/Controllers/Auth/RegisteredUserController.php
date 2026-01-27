@@ -39,12 +39,24 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            // もしデフォルトで一般ユーザーにするならここでroleを指定してもOK
+            // 'is_admin' => false, 
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // ✅ リダイレクト先を分岐
+        if ($user->is_admin) {
+            // 管理者の場合はLaravel内のダッシュボードへ
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        // 一般ユーザーの場合はReact側のフロントエンドへ飛ばす
+        // 管理者画面のセッションを持たせたくないなら、ここでAuth::logout()しても良いですが、
+        // React側でAPIを使うならログイン状態のまま飛ばすのが一般的だにょ
+        return redirect()->away('http://localhost:3000/home');
     }
+    
 }
