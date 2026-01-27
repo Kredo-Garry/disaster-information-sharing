@@ -51,6 +51,9 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
+    /**
+ * Log the user out of the application.
+ */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
@@ -59,6 +62,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // ❌ 修正前: return redirect('/'); 
+        // または return redirect()->route('admin.login');
+
+        // ✅ 修正後: 明示的に /login に飛ばすにょ！
+        return redirect('/login'); 
     }
+
 }
