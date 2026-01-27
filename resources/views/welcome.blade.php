@@ -87,7 +87,7 @@
         </div>
 
         <div class="card-bottom">
-            <a href="{{ route('login') }}" class="btn-signin mb-12">
+            <a href="{{ url('/login') }}" class="btn-signin mb-12">
                 Sign In
             </a>
 
