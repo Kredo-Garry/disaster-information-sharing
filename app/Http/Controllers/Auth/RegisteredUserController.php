@@ -32,12 +32,18 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'account_name' => ['required', 'string', 'max:255'], // ✅ 追加
+            'phone' => ['nullable', 'string', 'max:20'],       // ✅ 追加
+            'birth_date' => ['nullable', 'date'],             // ✅ 追加
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'account_name' => $request->account_name, // ✅ 追加
+            'phone' => $request->phone,               // ✅ 追加
+            'birth_date' => $request->birth_date,     // ✅ 追加
             'password' => Hash::make($request->password),
         ]);
 
@@ -45,6 +51,11 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        if ($user->is_admin) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        return redirect()->away('http://localhost:3000/home');
     }
+    
 }

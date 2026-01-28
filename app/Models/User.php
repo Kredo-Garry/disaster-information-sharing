@@ -16,10 +16,13 @@ class User extends Authenticatable
      * @var string[]
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'is_admin', // 追加：管理者フラグ
+    'name',
+    'email',
+    'password',
+    'account_name', // ✅ 追加
+    'phone',        // ✅ 追加
+    'birth_date',    // ✅ 追加
+    'is_admin',     // (既存)
     ];
 
     /**
@@ -41,6 +44,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_admin' => 'boolean', // 追加：bool にキャスト
+        'birth_date' => 'date',
     ];
 
     /**

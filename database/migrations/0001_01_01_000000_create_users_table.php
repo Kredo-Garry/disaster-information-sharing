@@ -15,6 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            
+            // ✅ ここから追加分だにょ
+            $table->string('account_name')->unique(); // アカウント名
+            $table->string('phone', 20)->nullable();  // 電話番号
+            $table->date('birth_date')->nullable();   // 生年月日
+            $table->boolean('is_admin')->default(false); // 管理者フラグ
+            // ✅ ここまで
+
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

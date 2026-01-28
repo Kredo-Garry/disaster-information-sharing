@@ -25,29 +25,35 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
+    // app/Http/Controllers/Auth/AuthenticatedSessionController.php
+
+    // app/Http/Controllers/Auth/AuthenticatedSessionController.php
+
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        // ログインしたユーザー情報を取得
-        $user = Auth::user();
+        // ログインしたユーザーを取得
+        $user = $request->user();
 
-        // 画像のDB構造に基づき、is_admin カラムの値で判定
-        if ($user->is_admin === 1) {
-            // 管理者の場合：LaravelのAdminダッシュボードへ
-            return redirect()->intended(route('dashboard', absolute: false));
+        // ✅ ここで運命の分かれ道だにょ！
+        if ($user->is_admin) {
+            // 管理者なら、Laravelの管理画面ダッシュボードへ
+            return redirect()->intended(route('admin.dashboard'));
         }
 
-        // 一般ユーザー（is_admin が 0）の場合：React側のページへ
-        // ※ReactのURLが異なる場合は、このURLを修正してください
+        // 一般ユーザーなら、React（localhost:3000）へ強制送還！
         return redirect()->away('http://localhost:3000/home');
     }
 
     /**
      * Destroy an authenticated session.
      */
+    /**
+ * Log the user out of the application.
+ */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
@@ -56,6 +62,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // ❌ 修正前: return redirect('/'); 
+        // または return redirect()->route('admin.login');
+
+        // ✅ 修正後: 明示的に /login に飛ばすにょ！
+        return redirect('/login'); 
     }
+
 }

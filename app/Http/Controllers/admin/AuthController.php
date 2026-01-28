@@ -45,6 +45,9 @@ class AuthController extends Controller
     /**
      * ログアウト処理
      */
+    /**
+     * ログアウト処理
+     */
     public function logout(Request $request)
     {
         Auth::logout();
@@ -52,6 +55,9 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('admin.login');
+        // ❌ 修正前: return redirect()->route('admin.login');
+        
+        // ✅ 修正後: 一般のログイン画面（/login）へ飛ばすにょ！
+        return redirect('/login'); 
     }
 }
