@@ -4,7 +4,6 @@
 <div class="space-y-6">
     <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-800">Disaster Categories</h1>
-        {{-- カテゴリ作成画面へのリンク --}}
         <a href="{{ route('admin.categories.create') }}" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition">
             + Add Category
         </a>
@@ -19,10 +18,25 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @forelse($categories as $category)
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+            {{-- アイコン表示エリア --}}
             <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-gray-50 border border-gray-100">
-                @switch(strtolower(trim($category->icon ?? $category->icon_type)))
+                @php
+                    // name または icon フィールドから小文字で判定用文字列を取得
+                    $type = strtolower(trim($category->icon ?? $category->name));
+                @endphp
+
+                @switch($type)
+                    @case('heavy rain') 🌧️ @break
+                    @case('tsunami') 🌊 @break
+                    @case('road closure') 🚧 @break
+                    @case('fire') 🔥 @break
+                    @case('lightning') ⚡ @break
+                    @case('water outage') 🚰 @break
+                    @case('power outage') 💡 @break
+                    @case('unstable internet') 📶 @break
+                    {{-- 互換性のための予備判定 --}}
                     @case('tap') 🚰 @break
-                    @case('water') 🚰 @break {{-- これを追加 --}}
+                    @case('water') 🚰 @break
                     @case('lightbulb') 💡 @break
                     @case('wifi') 📶 @break
                     @case('flame') 🔥 @break
@@ -40,14 +54,12 @@
             </div>
 
             <div class="flex items-center gap-2">
-                {{-- 編集ボタン --}}
                 <a href="{{ route('admin.categories.edit', $category) }}" class="text-gray-300 hover:text-blue-500 transition" title="Edit">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                     </svg>
                 </a>
 
-                {{-- 削除ボタン --}}
                 <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this category?');">
                     @csrf 
                     @method('DELETE')
