@@ -97,4 +97,5 @@
             locale: "en"
         });
     </script>
+    <p>sample</p>
 </x-guest-layout>
