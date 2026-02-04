@@ -8,32 +8,26 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the categories.
-     */
     public function index()
     {
         return view('admin.categories.index', [
-            'categories' => Category::latest()->paginate(10),
+            'categories' => Category::latest()->get(), // 管理画面は見やすさ重視で全件取得に！
         ]);
     }
 
-    /**
-     * Show the form for creating a new category.
-     */
     public function create()
     {
-        return view('admin.categories.create');
+        $icons = $this->getIconList();
+        return view('admin.categories.create', compact('icons'));
     }
 
-    /**
-     * Store a newly created category in storage.
-     */
     public function store(Request $request)
     {
+        // color_code もちゃんと受け取れるようにするにょ！
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'icon' => 'nullable|string|max:255', // ここを追加
+            'icon' => 'required|string|max:255',
+            'color_code' => 'nullable|string|max:7', // これが必要だにぇ！
             'description' => 'nullable|string',
         ]);
 
@@ -43,38 +37,41 @@ class CategoryController extends Controller
             ->with('success', 'Category created successfully!');
     }
 
-    /**
-     * Show the form for editing the specified category.
-     */
     public function edit(Category $category)
     {
-        return view('admin.categories.edit', compact('category'));
+        $icons = $this->getIconList();
+        return view('admin.categories.edit', compact('category', 'icons'));
     }
 
-    /**
-     * Update the specified category in storage.
-     */
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'icon' => 'nullable|string|max:255', // アイコン項目を追加
+            'icon' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
         $category->update($validated);
-
-        return redirect()->route('admin.categories.index')
-            ->with('success', 'Category updated successfully!');
+        return redirect()->route('admin.categories.index')->with('success', 'Updated!');
     }
 
     public function destroy(Category $category)
     {
-        // カテゴリを削除
         $category->delete();
+        return redirect()->route('admin.categories.index')->with('success', 'Deleted!');
+    }
 
-        // 一覧画面に戻って、メッセージを表示
-        return redirect()->route('admin.categories.index')
-            ->with('success', 'Category deleted successfully!');
+    // アイコンリストを一箇所で管理するにょ
+    private function getIconList() {
+        return [
+            'heavy_rain' => '🌧️ Heavy Rain',
+            'tsunami' => '🌊 Tsunami',
+            'road_closure' => '🚧 Road Closure',
+            'fire' => '🔥 Fire',
+            'lightning' => '⚡ Lightning',
+            'water_outage' => '🚰 Water Outage',
+            'power_outage' => '💡 Power Outage',
+            'unstable_internet' => '📶 Unstable Internet',
+        ];
     }
 }

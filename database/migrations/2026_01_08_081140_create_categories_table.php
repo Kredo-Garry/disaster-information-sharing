@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // ← これがあるか確認！
-            $table->text('description')->nullable(); // 先ほど追加した説明文用
+            $table->string('name'); 
+            $table->string('icon')->nullable();       // ← これを追加！
+            $table->string('color_code')->nullable(); // ← これを追加！
+            $table->text('description')->nullable(); 
             $table->timestamps();
         });
     }
