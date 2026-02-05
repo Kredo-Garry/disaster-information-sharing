@@ -1,0 +1,148 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
+export default function HomeVolcanoBlock({
+  apiBaseUrl = "",
+  limit = 3,
+  title = "Latest PHIVOLCS Volcano Bulletins",
+}) {
+  const [items, setItems] = useState([]);
+  const [status, setStatus] = useState("idle");
+  const [error, setError] = useState("");
+  const abortRef = useRef(null);
+
+  const endpoint = useMemo(() => {
+    const base = (apiBaseUrl || "").replace(/\/+$/, "");
+    const url = `${base}/api/home-volcano`;
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}limit=${encodeURIComponent(limit)}`;
+  }, [apiBaseUrl, limit]);
+
+  useEffect(() => {
+    setStatus("loading");
+    setError("");
+
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    (async () => {
+      try {
+        const res = await fetch(endpoint, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          const txt = await safeReadText(res);
+          throw new Error(`HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
+        }
+        const data = await res.json();
+        setItems(Array.isArray(data?.volcano) ? data.volcano : []);
+        setStatus("success");
+      } catch (e) {
+        if (e?.name === "AbortError") return;
+        setStatus("error");
+        setError(e?.message || "Failed to load volcano bulletins.");
+      }
+    })();
+
+    return () => controller.abort();
+  }, [endpoint]);
+
+  return (
+    <section style={styles.wrap}>
+      <div style={styles.headerRow}>
+        <h3 style={styles.title}>{title}</h3>
+      </div>
+
+      {status === "error" ? (
+        <div style={styles.errorBox}>
+          <div style={styles.errorTitle}>Failed to load</div>
+          <div style={styles.errorMsg}>{error}</div>
+          <div style={styles.hint}>
+            If React is :3000 and Laravel is :8000, set API Base URL to <code>http://localhost:8000</code>.
+          </div>
+        </div>
+      ) : null}
+
+      {status === "loading" ? <div style={styles.subtle}>Loading...</div> : null}
+
+      {status === "success" && items.length === 0 ? (
+        <div style={styles.emptyBox}>
+          <div style={styles.emptyTitle}>No volcano bulletin saved yet</div>
+          <div style={styles.subtle}>
+            Run: <code>php artisan phivolcs:fetch-volcano-alerts --cafile=/usr/local/etc/ssl/cacert_plus_phivolcs.pem</code>
+          </div>
+        </div>
+      ) : null}
+
+      {status === "success" && items.length > 0 ? (
+        <div style={styles.list}>
+          {items.slice(0, limit).map((x) => (
+            <article key={x.id ?? x.hash} style={styles.card}>
+              <div style={styles.cardTop}>
+                <div style={styles.badge}>{x.alert_level || "Volcano"}</div>
+                <div style={styles.cardTitle}>{x.volcano_name || "Volcano"}</div>
+              </div>
+
+              <div style={styles.subtle}>
+                <b>Issued:</b> {x.issued_at ? formatDateTime(x.issued_at) : "—"}
+              </div>
+
+              {x.summary_text ? <div style={styles.body}>{String(x.summary_text).slice(0, 320)}</div> : null}
+
+              {x.source_url ? (
+                <a href={x.source_url} target="_blank" rel="noreferrer" style={styles.link}>
+                  Source
+                </a>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+async function safeReadText(res) {
+  try {
+    const t = await res.text();
+    return t?.slice(0, 300) || "";
+  } catch {
+    return "";
+  }
+}
+
+function formatDateTime(input) {
+  const s = String(input);
+  const iso = s.includes("T") ? s : s.replace(" ", "T");
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return s;
+  return d.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+const styles = {
+  wrap: { maxWidth: 980, margin: "0 auto", padding: "16px 14px", boxSizing: "border-box" },
+  headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  title: { margin: 0, fontSize: 18, fontWeight: 700 },
+  subtle: { fontSize: 12, opacity: 0.75, marginTop: 6 },
+  list: { display: "grid", gridTemplateColumns: "1fr", gap: 10 },
+  card: { border: "1px solid rgba(0,0,0,0.12)", borderRadius: 14, padding: 12, background: "#fff" },
+  cardTop: { display: "flex", alignItems: "center", gap: 10, marginBottom: 8 },
+  badge: { fontSize: 12, fontWeight: 800, padding: "5px 10px", borderRadius: 999, background: "rgba(0,0,0,0.06)" },
+  cardTitle: { fontSize: 14, fontWeight: 800 },
+  body: { marginTop: 8, fontSize: 13, lineHeight: 1.5, opacity: 0.9 },
+  link: { display: "inline-block", marginTop: 10, fontSize: 12, textDecoration: "none", border: "1px solid rgba(0,0,0,0.12)", padding: "6px 10px", borderRadius: 999, color: "inherit" },
+  errorBox: { border: "1px solid rgba(220,53,69,0.35)", background: "rgba(220,53,69,0.06)", padding: 12, borderRadius: 14, marginBottom: 12 },
+  errorTitle: { fontWeight: 800, marginBottom: 6 },
+  errorMsg: { fontSize: 13, marginBottom: 6 },
+  hint: { fontSize: 12, opacity: 0.8 },
+  emptyBox: { border: "1px solid rgba(0,0,0,0.12)", background: "rgba(0,0,0,0.02)", padding: 14, borderRadius: 14 },
+  emptyTitle: { fontWeight: 800, marginBottom: 6 },
+};

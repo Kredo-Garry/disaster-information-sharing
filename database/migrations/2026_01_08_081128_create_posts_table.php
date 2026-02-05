@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->text('body')->nullable();
+
+            $table->decimal('lat', 10, 7);
+            $table->decimal('lng', 10, 7);
+
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('category_id')->nullable();
+
             $table->timestamps();
         });
     }
