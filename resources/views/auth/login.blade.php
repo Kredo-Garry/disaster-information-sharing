@@ -9,9 +9,25 @@
             <div class="bg-white bg-opacity-10 backdrop-blur-xl border border-white border-opacity-20 rounded-[2.5rem] shadow-2xl p-8 md:p-10 text-white">
                 
                 <div class="flex justify-center mb-6">
-                    <div class="bg-blue-600 p-4 rounded-2xl shadow-lg">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 0012 3v8h8c0-1.547-.35-3.013-1.01-4.32a9.992 9.992 0 00-4.67-4.67C13.013 1.35 11.547 1 10 1s-3.013.35-4.32 1.01c-1.307.66-2.415 1.574-3.264 2.658A9.954 9.954 0 001 10c0 1.547.35 3.013 1.01 4.32a9.993 9.993 0 004.67 4.67c1.307.66 2.773 1.01 4.32 1.01v-8H2z"></path>
+                    <div class="logo-bounce">
+                        <svg width="120" height="120" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="20" cy="20" r="20" fill="#2563EB" />
+                            
+                            <g transform="translate(4, 8)">
+                                <path d="M7 16.5C7 17.3284 7.67157 18 8.5 18H10.5V15H8.5C7.67157 15 7 15.6716 7 16.5Z" fill="white"/>
+                                <path d="M3 13.5V10.5C3 9.39543 3.89543 8.5 5 8.5H7L15 5V19L7 15.5H5C3.89543 15.5 3 14.6046 3 13.5Z" fill="#2563EB" stroke="white" stroke-width="1" stroke-linejoin="round"/>
+                                <path d="M15 5C17.2091 5 19 8.13401 19 12C19 15.866 17.2091 19 15 19" fill="white" stroke="white" stroke-width="1"/>
+                                
+                                <path d="M20 9C20.8 10 21.2 11 21.2 12C21.2 13 20.8 14 20 15" stroke="white" stroke-width="1.2" stroke-linecap="round">
+                                    <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" />
+                                </path>
+                                <path d="M22.5 7.5C23.7 9 24.3 10.5 24.3 12C24.3 13.5 23.7 15 22.5 16.5" stroke="white" stroke-width="1.2" stroke-linecap="round">
+                                    <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="0.3s" repeatCount="indefinite" />
+                                </path>
+                                <path d="M25 6C26.5 8 27 10 27 12C27 14 26.5 16 25 18" stroke="white" stroke-width="1.2" stroke-linecap="round">
+                                    <animate attributeName="opacity" values="0.2;1;0.2" dur="2s" begin="0.6s" repeatCount="indefinite" />
+                                </path>
+                            </g>
                         </svg>
                     </div>
                 </div>
@@ -54,4 +70,14 @@
             </div>
         </div>
     </div>
+
+    <style>
+        .logo-bounce {
+            animation: mini-bounce 3s infinite ease-in-out;
+        }
+        @keyframes mini-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
 </x-guest-layout>
