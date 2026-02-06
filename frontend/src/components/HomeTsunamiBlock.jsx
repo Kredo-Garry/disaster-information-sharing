@@ -2,20 +2,33 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 export default function HomeTsunamiBlock({
   apiBaseUrl = "",
-  limit = 3,
+  pageSize = 5,     // ★ 表示は5件
+  fetchLimit = 50,  // ★ 取得は多め（ページング母数）
   title = "Latest PHIVOLCS Tsunami Bulletins",
 }) {
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
   const abortRef = useRef(null);
 
   const endpoint = useMemo(() => {
     const base = (apiBaseUrl || "").replace(/\/+$/, "");
     const url = `${base}/api/home-tsunami`;
     const sep = url.includes("?") ? "&" : "?";
-    return `${url}${sep}limit=${encodeURIComponent(limit)}`;
-  }, [apiBaseUrl, limit]);
+    return `${url}${sep}limit=${encodeURIComponent(fetchLimit)}`;
+  }, [apiBaseUrl, fetchLimit]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil((items?.length || 0) / Math.max(1, pageSize)));
+  }, [items, pageSize]);
+
+  const pageItems = useMemo(() => {
+    const size = Math.max(1, pageSize);
+    const p = Math.min(Math.max(1, page), totalPages);
+    const start = (p - 1) * size;
+    return (items || []).slice(start, start + size);
+  }, [items, page, pageSize, totalPages]);
 
   useEffect(() => {
     setStatus("loading");
@@ -37,7 +50,9 @@ export default function HomeTsunamiBlock({
           throw new Error(`HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
         }
         const data = await res.json();
-        setItems(Array.isArray(data?.tsunami) ? data.tsunami : []);
+        const arr = Array.isArray(data?.tsunami) ? data.tsunami : [];
+        setItems(arr);
+        setPage(1);
         setStatus("success");
       } catch (e) {
         if (e?.name === "AbortError") return;
@@ -52,8 +67,40 @@ export default function HomeTsunamiBlock({
   return (
     <section style={styles.wrap}>
       <div style={styles.headerRow}>
-        <h3 style={styles.title}>{title}</h3>
+        <div>
+          <h3 style={styles.title}>{title}</h3>
+          <div style={styles.subtle}>
+            Showing {Math.min(pageSize, pageItems.length)} / {items.length || 0} (page {Math.min(page, totalPages)} of{" "}
+            {totalPages})
+          </div>
+        </div>
       </div>
+
+      {totalPages > 1 ? (
+        <div style={styles.pagerRow}>
+          <button
+            type="button"
+            style={{ ...styles.pagerBtn, opacity: page <= 1 ? 0.45 : 1 }}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1 || status === "loading"}
+          >
+            ← Prev
+          </button>
+
+          <div style={styles.pagerInfo}>
+            Page <b>{Math.min(page, totalPages)}</b> / <b>{totalPages}</b>
+          </div>
+
+          <button
+            type="button"
+            style={{ ...styles.pagerBtn, opacity: page >= totalPages ? 0.45 : 1 }}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages || status === "loading"}
+          >
+            Next →
+          </button>
+        </div>
+      ) : null}
 
       {status === "error" ? (
         <div style={styles.errorBox}>
@@ -78,7 +125,7 @@ export default function HomeTsunamiBlock({
 
       {status === "success" && items.length > 0 ? (
         <div style={styles.list}>
-          {items.slice(0, limit).map((x) => (
+          {pageItems.map((x) => (
             <article key={x.id ?? x.hash} style={styles.card}>
               <div style={styles.cardTop}>
                 <div style={styles.badge}>{x.status || "Tsunami"}</div>
@@ -128,17 +175,47 @@ function formatDateTime(input) {
 }
 
 const styles = {
-  wrap: { maxWidth: 980, margin: "0 auto", padding: "16px 14px", boxSizing: "border-box" },
+  wrap: {
+    maxWidth: 980,
+    margin: "0 auto",
+    padding: "16px 14px",
+    boxSizing: "border-box",
+    // 津波：薄い水色（既に入れている場合はそのまま）
+    background: "rgba(0, 180, 216, 0.06)",
+    borderRadius: 18,
+    marginTop: 8,
+    marginBottom: 8,
+  },
   headerRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   title: { margin: 0, fontSize: 18, fontWeight: 700 },
   subtle: { fontSize: 12, opacity: 0.75, marginTop: 6 },
+  pagerRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 },
+  pagerBtn: {
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "#fff",
+    padding: "7px 10px",
+    borderRadius: 999,
+    cursor: "pointer",
+    fontSize: 12,
+    whiteSpace: "nowrap",
+  },
+  pagerInfo: { fontSize: 12, opacity: 0.85 },
   list: { display: "grid", gridTemplateColumns: "1fr", gap: 10 },
   card: { border: "1px solid rgba(0,0,0,0.12)", borderRadius: 14, padding: 12, background: "#fff" },
   cardTop: { display: "flex", alignItems: "center", gap: 10, marginBottom: 8 },
   badge: { fontSize: 12, fontWeight: 800, padding: "5px 10px", borderRadius: 999, background: "rgba(0,0,0,0.06)" },
   cardTitle: { fontSize: 14, fontWeight: 800 },
   body: { marginTop: 8, fontSize: 13, lineHeight: 1.5, opacity: 0.9 },
-  link: { display: "inline-block", marginTop: 10, fontSize: 12, textDecoration: "none", border: "1px solid rgba(0,0,0,0.12)", padding: "6px 10px", borderRadius: 999, color: "inherit" },
+  link: {
+    display: "inline-block",
+    marginTop: 10,
+    fontSize: 12,
+    textDecoration: "none",
+    border: "1px solid rgba(0,0,0,0.12)",
+    padding: "6px 10px",
+    borderRadius: 999,
+    color: "inherit",
+  },
   errorBox: { border: "1px solid rgba(220,53,69,0.35)", background: "rgba(220,53,69,0.06)", padding: 12, borderRadius: 14, marginBottom: 12 },
   errorTitle: { fontWeight: 800, marginBottom: 6 },
   errorMsg: { fontSize: 13, marginBottom: 6 },

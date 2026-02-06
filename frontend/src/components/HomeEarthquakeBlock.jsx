@@ -6,33 +6,49 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
  * - Laravel側の API: GET /api/home-earthquakes
  * - 取得した地震データを /home で表示する用コンポーネント
  *
- * 使い方:
- *   import HomeEarthquakeBlock from "./components/HomeEarthquakeBlock";
- *   <HomeEarthquakeBlock />
- *
- * オプション:
- *   <HomeEarthquakeBlock apiBaseUrl="http://localhost:8000" />
- *   <HomeEarthquakeBlock limit={10} />
+ * 変更点（2026-02-xx）:
+ * - 表示件数は pageSize (=5) に固定し、ページ切替で全件確認できるようにした
+ * - 取得件数は fetchLimit (=50) を使う（表示とは別）
  */
 export default function HomeEarthquakeBlock({
-  apiBaseUrl = "", // 例: "http://localhost:8000"。空なら同一オリジン想定
-  limit = 10,
+  apiBaseUrl = "",
+  pageSize = 5, // ★ 表示：1ページの件数
+  fetchLimit = 50, // ★ 取得：APIから取ってくる件数（ページングの母数）
   title = "Latest PHIVOLCS Earthquakes",
 }) {
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
   const abortRef = useRef(null);
 
   const endpoint = useMemo(() => {
     const base = (apiBaseUrl || "").replace(/\/+$/, "");
-    // 現状のLaravel側は limit 固定でもOK。将来対応のため limit を query に付ける。
     const url = `${base}/api/home-earthquakes`;
     const sep = url.includes("?") ? "&" : "?";
-    return `${url}${sep}limit=${encodeURIComponent(limit)}`;
-  }, [apiBaseUrl, limit]);
+    return `${url}${sep}limit=${encodeURIComponent(fetchLimit)}`;
+  }, [apiBaseUrl, fetchLimit]);
 
-  useEffect(() => {
+  const totalPages = useMemo(() => {
+    const n = Math.max(1, Math.ceil((items?.length || 0) / Math.max(1, pageSize)));
+    return n;
+  }, [items, pageSize]);
+
+  const pageItems = useMemo(() => {
+    const size = Math.max(1, pageSize);
+    const p = Math.min(Math.max(1, page), totalPages);
+    const start = (p - 1) * size;
+    return (items || []).slice(start, start + size);
+  }, [items, page, pageSize, totalPages]);
+
+  const updatedLabel = useMemo(() => {
+    if (!items.length) return "";
+    const fetchedAt = items[0]?.fetched_at;
+    if (!fetchedAt) return "";
+    return `Updated: ${formatDateTime(fetchedAt)}`;
+  }, [items]);
+
+  const doFetch = async () => {
     setStatus("loading");
     setError("");
 
@@ -40,46 +56,39 @@ export default function HomeEarthquakeBlock({
     const controller = new AbortController();
     abortRef.current = controller;
 
-    (async () => {
-      try {
-        const res = await fetch(endpoint, {
-          method: "GET",
-          headers: { Accept: "application/json" },
-          signal: controller.signal,
-        });
+    try {
+      const res = await fetch(endpoint, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
 
-        if (!res.ok) {
-          const txt = await safeReadText(res);
-          throw new Error(`HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
-        }
-
-        const data = await res.json();
-        const arr = Array.isArray(data?.earthquakes) ? data.earthquakes : [];
-
-        // 念のため最低限の整形
-        const normalized = arr
-          .map((x) => normalizeEq(x))
-          .filter((x) => x && x.lat != null && x.lng != null);
-
-        setItems(normalized);
-        setStatus("success");
-      } catch (e) {
-        if (e?.name === "AbortError") return;
-        setStatus("error");
-        setError(e?.message || "Failed to load earthquakes.");
+      if (!res.ok) {
+        const txt = await safeReadText(res);
+        throw new Error(`HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
       }
-    })();
 
-    return () => controller.abort();
+      const data = await res.json();
+      const arr = Array.isArray(data?.earthquakes) ? data.earthquakes : [];
+
+      const normalized = arr
+        .map((x) => normalizeEq(x))
+        .filter((x) => x && x.lat != null && x.lng != null);
+
+      setItems(normalized);
+      setPage(1); // ★ 新しいデータになったら1ページ目に戻す
+      setStatus("success");
+    } catch (e) {
+      if (e?.name === "AbortError") return;
+      setStatus("error");
+      setError(e?.message || "Failed to load earthquakes.");
+    }
+  };
+
+  useEffect(() => {
+    doFetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
-
-  const updatedLabel = useMemo(() => {
-    if (!items.length) return "";
-    // APIは fetched_at を返してない仕様でもOK。返ってる場合だけ表示。
-    const fetchedAt = items[0]?.fetched_at;
-    if (!fetchedAt) return "";
-    return `Updated: ${formatDateTime(fetchedAt)}`;
-  }, [items]);
 
   return (
     <section style={styles.wrap}>
@@ -87,50 +96,48 @@ export default function HomeEarthquakeBlock({
         <div>
           <h3 style={styles.title}>{title}</h3>
           {updatedLabel ? <div style={styles.subtle}>{updatedLabel}</div> : null}
+          <div style={styles.subtle}>
+            Showing {Math.min(pageSize, pageItems.length)} / {items.length || 0} (page {Math.min(page, totalPages)} of{" "}
+            {totalPages})
+          </div>
         </div>
 
         <button
           type="button"
           style={styles.refreshBtn}
-          onClick={() => {
-            // endpointは同じでも、再実行したいので useEffect をトリガーする簡易策
-            // ＝ abort -> fetch をもう一回
-            setStatus("loading");
-            setError("");
-            if (abortRef.current) abortRef.current.abort();
-            // endpoint 依存の effect を待たずに即 fetch したいので、window.locationはしない
-            // ここは effect の endpoint をそのまま使って再フェッチする
-            (async () => {
-              const controller = new AbortController();
-              abortRef.current = controller;
-              try {
-                const res = await fetch(endpoint, {
-                  method: "GET",
-                  headers: { Accept: "application/json" },
-                  signal: controller.signal,
-                });
-                if (!res.ok) {
-                  const txt = await safeReadText(res);
-                  throw new Error(`HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
-                }
-                const data = await res.json();
-                const arr = Array.isArray(data?.earthquakes) ? data.earthquakes : [];
-                const normalized = arr.map((x) => normalizeEq(x)).filter(Boolean);
-                setItems(normalized);
-                setStatus("success");
-              } catch (e) {
-                if (e?.name === "AbortError") return;
-                setStatus("error");
-                setError(e?.message || "Failed to load earthquakes.");
-              }
-            })();
-          }}
+          onClick={doFetch}
           disabled={status === "loading"}
           aria-busy={status === "loading" ? "true" : "false"}
         >
           {status === "loading" ? "Loading..." : "Refresh"}
         </button>
       </div>
+
+      {totalPages > 1 ? (
+        <div style={styles.pagerRow}>
+          <button
+            type="button"
+            style={{ ...styles.pagerBtn, opacity: page <= 1 ? 0.45 : 1 }}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1 || status === "loading"}
+          >
+            ← Prev
+          </button>
+
+          <div style={styles.pagerInfo}>
+            Page <b>{Math.min(page, totalPages)}</b> / <b>{totalPages}</b>
+          </div>
+
+          <button
+            type="button"
+            style={{ ...styles.pagerBtn, opacity: page >= totalPages ? 0.45 : 1 }}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages || status === "loading"}
+          >
+            Next →
+          </button>
+        </div>
+      ) : null}
 
       {status === "error" ? (
         <div style={styles.errorBox}>
@@ -143,7 +150,7 @@ export default function HomeEarthquakeBlock({
         </div>
       ) : null}
 
-      {status === "loading" ? <SkeletonList rows={Math.min(6, limit)} /> : null}
+      {status === "loading" ? <SkeletonList rows={Math.min(5, pageSize)} /> : null}
 
       {status === "success" && items.length === 0 ? (
         <div style={styles.emptyBox}>
@@ -156,7 +163,7 @@ export default function HomeEarthquakeBlock({
 
       {status === "success" && items.length > 0 ? (
         <div style={styles.list}>
-          {items.slice(0, limit).map((eq) => (
+          {pageItems.map((eq) => (
             <EarthquakeCard key={eq.id ?? eq.hash ?? `${eq.lat}-${eq.lng}-${eq.occurred_at}`} eq={eq} />
           ))}
         </div>
@@ -211,7 +218,7 @@ function EarthquakeCard({ eq }) {
   );
 }
 
-function SkeletonList({ rows = 6 }) {
+function SkeletonList({ rows = 5 }) {
   return (
     <div style={styles.list}>
       {Array.from({ length: rows }).map((_, i) => (
@@ -258,15 +265,10 @@ async function safeReadText(res) {
 }
 
 function formatDateTime(input) {
-  // input が "2026-02-04 16:30:00" のような MySQL形式なら Date が解釈しづらいので補正
   const s = String(input);
   const iso = s.includes("T") ? s : s.replace(" ", "T") + (s.endsWith("Z") ? "" : "");
   const d = new Date(iso);
-
-  // Date変換に失敗したら元文字列返す
   if (Number.isNaN(d.getTime())) return s;
-
-  // 表示は読みやすい形式
   return d.toLocaleString(undefined, {
     year: "numeric",
     month: "short",
@@ -295,6 +297,11 @@ const styles = {
     margin: "0 auto",
     padding: "16px 14px",
     boxSizing: "border-box",
+    // 地震：薄い茶色（既に入れている場合はそのまま）
+    background: "rgba(150, 75, 0, 0.06)",
+    borderRadius: 18,
+    marginTop: 8,
+    marginBottom: 8,
   },
   headerRow: {
     display: "flex",
@@ -322,6 +329,26 @@ const styles = {
     cursor: "pointer",
     fontSize: 13,
     whiteSpace: "nowrap",
+  },
+  pagerRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 10,
+  },
+  pagerBtn: {
+    border: "1px solid rgba(0,0,0,0.12)",
+    background: "#fff",
+    padding: "7px 10px",
+    borderRadius: 999,
+    cursor: "pointer",
+    fontSize: 12,
+    whiteSpace: "nowrap",
+  },
+  pagerInfo: {
+    fontSize: 12,
+    opacity: 0.85,
   },
   list: {
     display: "grid",

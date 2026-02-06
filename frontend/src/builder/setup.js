@@ -3,6 +3,7 @@ import GoogleMapBlock from "../components/GoogleMapBlock";
 import HomeEarthquakeBlock from "../components/HomeEarthquakeBlock";
 import HomeTsunamiBlock from "../components/HomeTsunamiBlock";
 import HomeVolcanoBlock from "../components/HomeVolcanoBlock";
+import CurrentLocationTextBlock from "../components/CurrentLocationTextBlock";
 
 /**
  * Builder の init / register を「このファイル1箇所」に集約する。
@@ -38,6 +39,29 @@ if (w && !w.__BUILDER_REGISTRY_DONE__) {
       { name: "zoom", type: "number", defaultValue: 12 },
       { name: "centerLat", type: "number", defaultValue: 10.3157 },
       { name: "centerLng", type: "number", defaultValue: 123.8854 },
+    ],
+  });
+
+  // --- CurrentLocationTextBlock ---
+  Builder.registerComponent(CurrentLocationTextBlock, {
+    name: "CurrentLocationTextBlock",
+    inputs: [
+      { name: "title", type: "string", defaultValue: "Current Location" },
+      { name: "fallbackText", type: "string", defaultValue: "Detecting location..." },
+      { name: "deniedText", type: "string", defaultValue: "Location permission denied" },
+      { name: "errorText", type: "string", defaultValue: "Location unavailable" },
+      { name: "cacheMinutes", type: "number", defaultValue: 10 },
+      { name: "format", type: "string", defaultValue: "{city}, {region}" },
+      { name: "icon", type: "boolean", defaultValue: true },
+
+      // 30%UPをBuilderで調整可能に
+      { name: "iconScale", type: "number", defaultValue: 1.3, helperText: "Icon size scale (e.g. 1.3 = +30%)" },
+      { name: "valueScale", type: "number", defaultValue: 1.3, helperText: "Location text size scale (e.g. 1.3 = +30%)" },
+
+      // 既存デザインに合わせたくなった時用
+      { name: "className", type: "string", defaultValue: "" },
+      { name: "titleClassName", type: "string", defaultValue: "" },
+      { name: "valueClassName", type: "string", defaultValue: "" },
     ],
   });
 

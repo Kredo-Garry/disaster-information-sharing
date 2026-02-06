@@ -36,7 +36,7 @@
             <a href="#" class="text-xs text-green-500 mt-4 block hover:underline italic">View all posts (Coming Soon) →</a>
         </div>
 
-        {{-- Categories (ここを修正しました) --}}
+        {{-- Categories --}}
         <div class="bg-white rounded-xl shadow-md border-l-4 border-yellow-500 p-6 hover:shadow-lg transition-shadow">
             <div class="flex items-center">
                 <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
@@ -48,6 +48,158 @@
                 </div>
             </div>
             <a href="{{ route('admin.categories.index') }}" class="text-xs text-yellow-500 mt-4 block hover:underline italic">View all categories →</a>
+        </div>
+    </div>
+
+    {{-- PHIVOLCS Fetch Status --}}
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-800">PHIVOLCS Update Status</h2>
+        <a href="{{ route('admin.phivolcs.index') }}" class="text-sm text-indigo-600 hover:underline">
+            Open manual fetch page →
+        </a>
+    </div>
+
+    @php
+        // helper: status -> border/bg/text classes
+        $statusToBorder = function($s) {
+            return match($s) {
+                'ok' => 'border-emerald-500',
+                'warn' => 'border-amber-500',
+                default => 'border-red-500',
+            };
+        };
+        $statusToBadge = function($s) {
+            return match($s) {
+                'ok' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                'warn' => 'bg-amber-50 text-amber-700 border-amber-100',
+                default => 'bg-red-50 text-red-700 border-red-100',
+            };
+        };
+        $statusToText = function($s) {
+            return match($s) {
+                'ok' => 'text-emerald-700',
+                'warn' => 'text-amber-700',
+                default => 'text-red-700',
+            };
+        };
+    @endphp
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {{-- Earthquakes --}}
+        <div class="bg-white rounded-xl shadow-md border-l-4 {{ $statusToBorder($eqFresh['status'] ?? 'danger') }} p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Earthquakes</p>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border {{ $statusToBadge($eqFresh['status'] ?? 'danger') }}">
+                            {{ ($eqFresh['label'] ?? 'Unknown') }}
+                            @if(isset($eqFresh['hours']) && $eqFresh['hours'] !== null)
+                                <span class="ml-1 opacity-70">({{ $eqFresh['hours'] }}h)</span>
+                            @endif
+                        </span>
+                    </div>
+
+                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($eqCount ?? 0) }}</p>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                        Last fetched:
+                        <span class="font-mono">
+                            {{ $eqFetchedAt ? $eqFetchedAt->format('Y/m/d H:i') : '—' }}
+                        </span>
+                    </p>
+
+                    @if(($eqFresh['status'] ?? 'danger') !== 'ok')
+                        <p class="text-xs mt-2 {{ $statusToText($eqFresh['status'] ?? 'danger') }} font-semibold">
+                            Action: run manual fetch or check scheduler/cron.
+                        </p>
+                    @endif
+                </div>
+
+                <div class="p-3 rounded-full bg-amber-50 text-amber-700 flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 2l2 7-2 2-2-2 2-7zM5 22h14l-2-8H7l-2 8z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Volcano --}}
+        <div class="bg-white rounded-xl shadow-md border-l-4 {{ $statusToBorder($volFresh['status'] ?? 'danger') }} p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Volcano</p>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border {{ $statusToBadge($volFresh['status'] ?? 'danger') }}">
+                            {{ ($volFresh['label'] ?? 'Unknown') }}
+                            @if(isset($volFresh['hours']) && $volFresh['hours'] !== null)
+                                <span class="ml-1 opacity-70">({{ $volFresh['hours'] }}h)</span>
+                            @endif
+                        </span>
+                    </div>
+
+                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($volCount ?? 0) }}</p>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                        Last fetched:
+                        <span class="font-mono">
+                            {{ $volFetchedAt ? $volFetchedAt->format('Y/m/d H:i') : '—' }}
+                        </span>
+                    </p>
+
+                    @if(($volFresh['status'] ?? 'danger') !== 'ok')
+                        <p class="text-xs mt-2 {{ $statusToText($volFresh['status'] ?? 'danger') }} font-semibold">
+                            Action: run manual fetch or check scheduler/cron.
+                        </p>
+                    @endif
+                </div>
+
+                <div class="p-3 rounded-full bg-rose-50 text-rose-600 flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 2c2 3 3 5 3 7a3 3 0 11-6 0c0-2 1-4 3-7zM5 22h14l-2-6H7l-2 6z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- Tsunami --}}
+        <div class="bg-white rounded-xl shadow-md border-l-4 {{ $statusToBorder($tsuFresh['status'] ?? 'danger') }} p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Tsunami</p>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border {{ $statusToBadge($tsuFresh['status'] ?? 'danger') }}">
+                            {{ ($tsuFresh['label'] ?? 'Unknown') }}
+                            @if(isset($tsuFresh['hours']) && $tsuFresh['hours'] !== null)
+                                <span class="ml-1 opacity-70">({{ $tsuFresh['hours'] }}h)</span>
+                            @endif
+                        </span>
+                    </div>
+
+                    <p class="text-2xl font-extrabold text-gray-900 mt-1">{{ number_format($tsuCount ?? 0) }}</p>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                        Last fetched:
+                        <span class="font-mono">
+                            {{ $tsuFetchedAt ? $tsuFetchedAt->format('Y/m/d H:i') : '—' }}
+                        </span>
+                    </p>
+
+                    @if(($tsuFresh['status'] ?? 'danger') !== 'ok')
+                        <p class="text-xs mt-2 {{ $statusToText($tsuFresh['status'] ?? 'danger') }} font-semibold">
+                            Action: run manual fetch or check scheduler/cron.
+                        </p>
+                    @endif
+                </div>
+
+                <div class="p-3 rounded-full bg-sky-50 text-sky-600 flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 18c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>
+                    </svg>
+                </div>
+            </div>
         </div>
     </div>
 
