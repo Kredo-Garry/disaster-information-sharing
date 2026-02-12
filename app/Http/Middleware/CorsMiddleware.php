@@ -9,21 +9,35 @@ class CorsMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        $response = $next($request);
+        $origin = $request->headers->get('Origin');
 
-        $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:3000');
-        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        $response->headers->set('Access-Control-Allow-Credentials', 'true');
+        // ✅ 許可するOrigin（必要なら増やす）
+        $allowedOrigins = [
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+        ];
 
-        // OPTIONS リクエスト（プリフライト）を即時OKにする
+        // credentials を使うので '*' は絶対に返さない
+        $allowOriginHeader = in_array($origin, $allowedOrigins, true)
+            ? $origin
+            : 'http://localhost:3000';
+
+        $headers = [
+            'Access-Control-Allow-Origin' => $allowOriginHeader,
+            'Access-Control-Allow-Credentials' => 'true',
+            'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers' => 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN, X-CSRF-TOKEN',
+            'Vary' => 'Origin',
+        ];
+
+        // ✅ Preflight は即時返す
         if ($request->getMethod() === 'OPTIONS') {
-            return response('', 204)
-                ->header('Access-Control-Allow-Origin', 'http://localhost:3000')
-                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            return response('', 204)->withHeaders($headers);
         }
 
-        return $response;
+        $response = $next($request);
+
+        // ✅ ここが最後に走るので、他が '*' を付けても上書きできる
+        return $response->withHeaders($headers);
     }
 }

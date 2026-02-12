@@ -1,9 +1,11 @@
+// frontend/src/builder/setup.js
 import { Builder, builder } from "@builder.io/react";
 import GoogleMapBlock from "../components/GoogleMapBlock";
 import HomeEarthquakeBlock from "../components/HomeEarthquakeBlock";
 import HomeTsunamiBlock from "../components/HomeTsunamiBlock";
 import HomeVolcanoBlock from "../components/HomeVolcanoBlock";
 import CurrentLocationTextBlock from "../components/CurrentLocationTextBlock";
+import MyPageBlock from "../components/MyPageBlock";
 
 /**
  * Builder の init / register を「このファイル1箇所」に集約する。
@@ -53,12 +55,8 @@ if (w && !w.__BUILDER_REGISTRY_DONE__) {
       { name: "cacheMinutes", type: "number", defaultValue: 10 },
       { name: "format", type: "string", defaultValue: "{city}, {region}" },
       { name: "icon", type: "boolean", defaultValue: true },
-
-      // 30%UPをBuilderで調整可能に
-      { name: "iconScale", type: "number", defaultValue: 1.3, helperText: "Icon size scale (e.g. 1.3 = +30%)" },
-      { name: "valueScale", type: "number", defaultValue: 1.3, helperText: "Location text size scale (e.g. 1.3 = +30%)" },
-
-      // 既存デザインに合わせたくなった時用
+      { name: "iconScale", type: "number", defaultValue: 1.3 },
+      { name: "valueScale", type: "number", defaultValue: 1.3 },
       { name: "className", type: "string", defaultValue: "" },
       { name: "titleClassName", type: "string", defaultValue: "" },
       { name: "valueClassName", type: "string", defaultValue: "" },
@@ -69,27 +67,9 @@ if (w && !w.__BUILDER_REGISTRY_DONE__) {
   Builder.registerComponent(HomeEarthquakeBlock, {
     name: "HomeEarthquakeBlock",
     inputs: [
-      {
-        name: "title",
-        type: "string",
-        defaultValue: "Latest PHIVOLCS Earthquakes",
-        friendlyName: "Title",
-      },
-      {
-        name: "limit",
-        type: "number",
-        defaultValue: 10,
-        friendlyName: "Number of items",
-        helperText: "How many earthquakes to show",
-      },
-      {
-        name: "apiBaseUrl",
-        type: "string",
-        defaultValue: "",
-        friendlyName: "API Base URL",
-        helperText:
-          'Leave blank if same origin. If React is :3000 and Laravel is :8000, set "http://localhost:8000".',
-      },
+      { name: "title", type: "string", defaultValue: "Latest PHIVOLCS Earthquakes" },
+      { name: "limit", type: "number", defaultValue: 10 },
+      { name: "apiBaseUrl", type: "string", defaultValue: "" },
     ],
   });
 
@@ -97,26 +77,9 @@ if (w && !w.__BUILDER_REGISTRY_DONE__) {
   Builder.registerComponent(HomeTsunamiBlock, {
     name: "HomeTsunamiBlock",
     inputs: [
-      {
-        name: "title",
-        type: "string",
-        defaultValue: "Latest PHIVOLCS Tsunami Bulletins",
-        friendlyName: "Title",
-      },
-      {
-        name: "limit",
-        type: "number",
-        defaultValue: 3,
-        friendlyName: "Number of items",
-      },
-      {
-        name: "apiBaseUrl",
-        type: "string",
-        defaultValue: "",
-        friendlyName: "API Base URL",
-        helperText:
-          'Leave blank if same origin. If React is :3000 and Laravel is :8000, set "http://localhost:8000".',
-      },
+      { name: "title", type: "string", defaultValue: "Latest PHIVOLCS Tsunami Bulletins" },
+      { name: "limit", type: "number", defaultValue: 3 },
+      { name: "apiBaseUrl", type: "string", defaultValue: "" },
     ],
   });
 
@@ -124,26 +87,18 @@ if (w && !w.__BUILDER_REGISTRY_DONE__) {
   Builder.registerComponent(HomeVolcanoBlock, {
     name: "HomeVolcanoBlock",
     inputs: [
-      {
-        name: "title",
-        type: "string",
-        defaultValue: "Latest PHIVOLCS Volcano Bulletins",
-        friendlyName: "Title",
-      },
-      {
-        name: "limit",
-        type: "number",
-        defaultValue: 3,
-        friendlyName: "Number of items",
-      },
-      {
-        name: "apiBaseUrl",
-        type: "string",
-        defaultValue: "",
-        friendlyName: "API Base URL",
-        helperText:
-          'Leave blank if same origin. If React is :3000 and Laravel is :8000, set "http://localhost:8000".',
-      },
+      { name: "title", type: "string", defaultValue: "Latest PHIVOLCS Volcano Bulletins" },
+      { name: "limit", type: "number", defaultValue: 3 },
+      { name: "apiBaseUrl", type: "string", defaultValue: "" },
+    ],
+  });
+
+  // ✅ MyPageBlock (/my-page)
+  Builder.registerComponent(MyPageBlock, {
+    name: "MyPageBlock",
+    inputs: [
+      { name: "title", type: "string", defaultValue: "My Page" },
+      { name: "apiBaseUrl", type: "string", defaultValue: "http://localhost:8000" },
     ],
   });
 

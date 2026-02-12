@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\PostApiController;
 use App\Http\Controllers\Api\HomeEarthquakeController;
 use App\Http\Controllers\Api\HomeTsunamiController;
 use App\Http\Controllers\Api\HomeVolcanoController;
+use App\Http\Controllers\Api\FeedApiController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -42,3 +44,5 @@ Route::post('/posts', [PostApiController::class, 'store']);
 Route::get('/home-earthquakes', [HomeEarthquakeController::class, 'index']);
 Route::get('/home-tsunami', [HomeTsunamiController::class, 'index']);
 Route::get('/home-volcano', [HomeVolcanoController::class, 'index']);
+
+Route::get('/feed', [FeedApiController::class, 'index']);

@@ -16,13 +16,20 @@ class User extends Authenticatable
      * @var string[]
      */
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-    'account_name', // ✅ 追加
-    'phone',        // ✅ 追加
-    'birth_date',    // ✅ 追加
-    'is_admin',     // (既存)
+        'name',
+        'email',
+        'password',
+        'account_name',
+        'phone',
+        'birth_date',
+        'is_admin',
+
+        // ✅ MyPage
+        'family_id',
+        'status',
+        'status_message',
+        'status_updated_at',
+        'status_expires_at',
     ];
 
     /**
@@ -43,15 +50,14 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'is_admin' => 'boolean', // 追加：bool にキャスト
+        'is_admin' => 'boolean',
         'birth_date' => 'date',
+
+        // ✅ MyPage
+        'status_updated_at' => 'datetime',
+        'status_expires_at' => 'datetime',
     ];
 
-    /**
-     * 管理者かどうかを判定
-     *
-     * @return bool
-     */
     public function isAdmin(): bool
     {
         return $this->is_admin;

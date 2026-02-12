@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\PhivolcsFetchController;
+use App\Http\Controllers\Admin\AdminFeedController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,3 +62,10 @@ Route::middleware(['web', 'auth', 'admin'])
         // --- Logout ---
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
+
+Route::get('/feeds', [AdminFeedController::class, 'index'])->name('feeds.index');
+Route::get('/feeds/create', [AdminFeedController::class, 'create'])->name('feeds.create');
+Route::post('/feeds', [AdminFeedController::class, 'store'])->name('feeds.store');
+
+Route::post('/feeds/{feed}/toggle', [AdminFeedController::class, 'toggle'])->name('feeds.toggle');
+Route::delete('/feeds/{feed}', [AdminFeedController::class, 'destroy'])->name('feeds.destroy');

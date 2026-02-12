@@ -1,27 +1,25 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth; // 追加
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminFeedController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Api\MyPageApiController;
 
 // --- 公開ページ ---
 Route::get('/', function () { return view('welcome'); });
 
 // --- 共通のログイン後リダイレクト先 (自動振り分け) ---
-// Breezeが標準で使う 'dashboard' ルートを一つにまとめ、中身で分岐させます
 Route::get('/dashboard', function () {
     $user = Auth::user();
 
-    // 管理者の場合は管理画面へ、一般ユーザーはReactへ
     if ($user->is_admin === 1) {
         return redirect()->route('admin.dashboard');
     }
 
-    // 一般ユーザーの飛び先
     return redirect()->away('http://localhost:3000');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -34,16 +32,30 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| ✅ MyPage JSON API（web/session認証で守る）
+|--------------------------------------------------------------------------
+|
+| routes/api.php ではなく web.php に置くことで
+| Breeze(session) の auth をそのまま使える。
+| React側は fetch/axios で credentials を付けて呼ぶ想定。
+|
+*/
+Route::middleware('auth')->prefix('api')->group(function () {
+    Route::get('/me', [MyPageApiController::class, 'me']);
+    Route::patch('/me/status', [MyPageApiController::class, 'updateStatus']);
+    Route::patch('/me/family', [MyPageApiController::class, 'updateFamily']);
+    Route::get('/family', [MyPageApiController::class, 'family']);
+});
+
+/*
+|--------------------------------------------------------------------------
 | 管理者ルート (Admin routes)
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->name('admin.')->group(function () {
-    // 管理者専用エリア
     Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
-        // 管理者ダッシュボード
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-        // 各種管理機能
         Route::resource('users', UserController::class);
         Route::resource('feeds', AdminFeedController::class)->only(['index', 'destroy']);
         Route::resource('categories', CategoryController::class);
