@@ -6,24 +6,47 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('feeds', function (Blueprint $table) {
             $table->id();
-            $table->string('source_platform'); // これが必要！
-            $table->string('external_author')->nullable(); // これが必要！
+
+            // 投稿者（ユーザー投稿用）
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
+            // 外部ソース系
+            $table->string('source_platform');
+            $table->string('external_author')->nullable();
+            $table->string('original_url')->nullable();
+
+            // 本文
             $table->text('content');
-            $table->string('original_url')->nullable(); // これが必要！
+
+            // タグ
+            $table->json('tags')->nullable();
+
+            // 公開日時
+            $table->timestamp('published_at')->nullable();
+
+            // 表示制御
+            $table->boolean('is_visible')->default(true);
+            $table->integer('sort_weight')->default(0);
+
+            // 埋め込み用HTML
+            $table->longText('embed_html')->nullable();
+
             $table->timestamps();
+
+            // 🔥 パフォーマンス向上
+            $table->index('published_at');
+            $table->index('is_visible');
+            $table->index('source_platform');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('feeds');

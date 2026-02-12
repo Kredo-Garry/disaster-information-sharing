@@ -10,8 +10,7 @@ class PhivolcsVolcanoAlert extends Model
 
     protected $fillable = [
         'hash',
-        'volcano_name',   // ✅ これが必須
-        'volcano',        // 既にあるなら残してOK（任意）
+        'volcano_name',
         'alert_level',
         'issued_at',
         'summary_text',
@@ -21,7 +20,7 @@ class PhivolcsVolcanoAlert extends Model
     ];
 
     protected $casts = [
-        'issued_at' => 'datetime',
+        'issued_at'  => 'datetime',
         'fetched_at' => 'datetime',
     ];
 }

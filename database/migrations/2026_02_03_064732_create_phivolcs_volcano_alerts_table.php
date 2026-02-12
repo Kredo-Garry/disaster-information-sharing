@@ -11,16 +11,21 @@ return new class extends Migration {
             $table->id();
             $table->string('hash')->unique();
 
-            $table->string('volcano')->nullable();          // 例: "Mayon Volcano"
-            $table->string('alert_level')->nullable();      // 例: "Alert Level 2"
-            $table->timestamp('issued_at')->nullable();     // 発表時刻
-            $table->text('summary_text')->nullable();       // 要約
-            $table->text('full_text')->nullable();          // 可能なら全文
-            $table->string('source_url')->nullable();
+            // ✅ 統一：ここだけを使う
+            $table->string('volcano_name')->nullable();     // 例: "Mayon Volcano"
 
+            $table->string('alert_level')->nullable();
+            $table->timestamp('issued_at')->nullable();
+            $table->text('summary_text')->nullable();
+            $table->longText('full_text')->nullable();      // 長くなるので longText 推奨
+            $table->string('source_url')->nullable();
             $table->timestamp('fetched_at')->nullable();
 
             $table->timestamps();
+
+            // 任意だけど便利
+            $table->index('volcano_name');
+            $table->index('issued_at');
         });
     }
 

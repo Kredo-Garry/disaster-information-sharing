@@ -28,6 +28,7 @@ class FetchPhivolcsVolcanoAlerts extends Command
         $url = trim((string)$this->option('url')) ?: 'https://www.phivolcs.dost.gov.ph/volcano-bulletin/';
 
         $res = $this->fetchUrlFollowRedirects($url, 'text/html', $insecure);
+
         if (!$res['ok']) {
             $this->error('Failed to fetch volcano bulletin.');
             if ($this->option('debug')) {
@@ -54,26 +55,26 @@ class FetchPhivolcsVolcanoAlerts extends Command
         $saved = 0;
 
         foreach ($rows as $r) {
-            // volcano_name は DB必須。取れない場合は絶対に埋める
+            // volcano_name は必須扱い（取れない場合も埋める）
             $volcanoName = $r['volcano_name'] ?: 'Unknown Volcano';
 
             $hash = sha1(
-                ($volcanoName) . '|' .
+                $volcanoName . '|' .
                 (($r['issued_at_raw'] ?? '') ?: '') . '|' .
                 substr($r['summary_text'] ?? '', 0, 800)
             );
 
+            // ✅ DB設計に合わせて volcano_name のみに統一（volcano カラムは使わない）
             PhivolcsVolcanoAlert::updateOrCreate(
                 ['hash' => $hash],
                 [
-                    'volcano_name' => $volcanoName,          // ✅ 必須カラム
-                    'volcano' => $volcanoName,               // 任意（既存互換）
-                    'alert_level' => $r['alert_level'],
-                    'issued_at' => $r['issued_at'],
+                    'volcano_name' => $volcanoName,
+                    'alert_level'  => $r['alert_level'],
+                    'issued_at'    => $r['issued_at'],
                     'summary_text' => $r['summary_text'],
-                    'full_text' => $r['full_text'],
-                    'source_url' => $finalUrl,
-                    'fetched_at' => $fetchedAt,
+                    'full_text'    => $r['full_text'],
+                    'source_url'   => $finalUrl,
+                    'fetched_at'   => $fetchedAt,
                 ]
             );
 
@@ -91,7 +92,6 @@ class FetchPhivolcsVolcanoAlerts extends Command
      * volcano-bulletin ページは「複数の火山カード」が並ぶ。
      * 例:
      *  Taal Volcano Summary of 24Hr Observation 09 July 2025 12:00 AM ...
-     *  Mayon Volcano Summary of 24Hr Observation ...
      */
     private function parseVolcanoListFromText(string $text, int $limit): array
     {
@@ -117,12 +117,12 @@ class FetchPhivolcsVolcanoAlerts extends Command
                 $snippet = preg_replace('/\s+/', ' ', $snippet);
 
                 $rows[] = [
-                    'volcano_name' => $name,
-                    'alert_level' => null, // この一覧ページでは Alert Level が出ないことが多い
-                    'issued_at' => $issuedAt,
+                    'volcano_name'  => $name,
+                    'alert_level'   => null, // 一覧ページでは Alert Level が出ないことが多い
+                    'issued_at'     => $issuedAt,
                     'issued_at_raw' => $issuedRaw,
-                    'summary_text' => mb_substr($snippet, 0, 800),
-                    'full_text' => $text, // 一覧ページ全文（必要なら後で個別ページ取得に拡張）
+                    'summary_text'  => mb_substr($snippet, 0, 800),
+                    'full_text'     => $text, // 一覧ページ全文（必要なら後で個別ページ取得に拡張）
                 ];
             }
         }

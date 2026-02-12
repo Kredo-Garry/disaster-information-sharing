@@ -11,6 +11,7 @@ class HomeVolcanoController extends Controller
     public function index(Request $request)
     {
         $limit = max(1, min(20, (int)$request->query('limit', 3)));
+        $tz = config('app.timezone'); // Asia/Manila
 
         $items = PhivolcsVolcanoAlert::query()
             ->orderByDesc('issued_at')
@@ -25,7 +26,25 @@ class HomeVolcanoController extends Controller
                 'source_url',
                 'fetched_at',
                 'hash',
-            ]);
+            ])
+            ->map(function ($item) use ($tz) {
+
+                if ($item->issued_at) {
+                    $item->issued_at = $item->issued_at
+                        ->copy()
+                        ->timezone($tz)
+                        ->toIso8601String();
+                }
+
+                if ($item->fetched_at) {
+                    $item->fetched_at = $item->fetched_at
+                        ->copy()
+                        ->timezone($tz)
+                        ->toIso8601String();
+                }
+
+                return $item;
+            });
 
         return response()->json(['volcano' => $items]);
     }
