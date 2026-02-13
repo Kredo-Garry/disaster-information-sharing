@@ -10,9 +10,9 @@ const emojiByTitle = (title) => {
   if (t.includes("road closure")) return "🚧";
   if (t.includes("fire")) return "🔥";
   if (t.includes("lightning")) return "⚡";
-  if (t.includes("water outage")) return "🚰";
-  if (t.includes("power outage")) return "💡";
-  if (t.includes("unstable internet")) return "🛜";
+  if (t.includes("water outage")) return "❌🚰";
+  if (t.includes("power outage")) return "❌💡";
+  if (t.includes("unstable internet")) return "❌🛜";
   return "📍";
 };
 

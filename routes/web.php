@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
@@ -9,10 +11,20 @@ use App\Http\Controllers\Admin\AdminFeedController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Api\MyPageApiController;
 
-// --- 公開ページ ---
-Route::get('/', function () { return view('welcome'); });
+/*
+|--------------------------------------------------------------------------
+| 公開ページ
+|--------------------------------------------------------------------------
+*/
+Route::get('/', function () {
+    return view('welcome');
+});
 
-// --- 共通のログイン後リダイレクト先 (自動振り分け) ---
+/*
+|--------------------------------------------------------------------------
+| ログイン後リダイレクト
+|--------------------------------------------------------------------------
+*/
 Route::get('/dashboard', function () {
     $user = Auth::user();
 
@@ -23,7 +35,11 @@ Route::get('/dashboard', function () {
     return redirect()->away('http://localhost:3000');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// --- プロフィール (全ログインユーザー) ---
+/*
+|--------------------------------------------------------------------------
+| プロフィール（全ログインユーザー）
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -32,35 +48,52 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| ✅ MyPage JSON API（web/session認証で守る）
+| MyPage JSON API（web/session認証）
 |--------------------------------------------------------------------------
-|
-| routes/api.php ではなく web.php に置くことで
-| Breeze(session) の auth をそのまま使える。
-| React側は fetch/axios で credentials を付けて呼ぶ想定。
-|
 */
 Route::middleware('auth')->prefix('api')->group(function () {
+
     Route::get('/me', [MyPageApiController::class, 'me']);
     Route::patch('/me/status', [MyPageApiController::class, 'updateStatus']);
     Route::patch('/me/family', [MyPageApiController::class, 'updateFamily']);
     Route::get('/family', [MyPageApiController::class, 'family']);
+
+    // React用ログアウト
+    Route::post('/logout', function (Request $request) {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->noContent(); // 204
+    })->name('api.logout');
 });
 
 /*
 |--------------------------------------------------------------------------
-| 管理者ルート (Admin routes)
+| 管理者ルート
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])
+    ->group(function () {
+
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+            ->name('dashboard');
 
         Route::resource('users', UserController::class);
-        Route::resource('feeds', AdminFeedController::class)->only(['index', 'destroy']);
+
+        // ✅ Feedは index / store / destroy を許可
+        Route::resource('feeds', AdminFeedController::class)
+            ->only(['index', 'store', 'destroy']);
+
         Route::resource('categories', CategoryController::class);
     });
-});
 
-// --- Auth関連 (ログイン・登録など) ---
+/*
+|--------------------------------------------------------------------------
+| Auth関連
+|--------------------------------------------------------------------------
+*/
 require __DIR__.'/auth.php';

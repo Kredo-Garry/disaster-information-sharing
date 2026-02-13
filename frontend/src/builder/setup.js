@@ -6,6 +6,7 @@ import HomeTsunamiBlock from "../components/HomeTsunamiBlock";
 import HomeVolcanoBlock from "../components/HomeVolcanoBlock";
 import CurrentLocationTextBlock from "../components/CurrentLocationTextBlock";
 import MyPageBlock from "../components/MyPageBlock";
+import FeedBlock from "../components/FeedBlock"; // ✅ 追加
 
 /**
  * Builder の init / register を「このファイル1箇所」に集約する。
@@ -99,6 +100,18 @@ if (w && !w.__BUILDER_REGISTRY_DONE__) {
     inputs: [
       { name: "title", type: "string", defaultValue: "My Page" },
       { name: "apiBaseUrl", type: "string", defaultValue: "http://localhost:8000" },
+    ],
+  });
+
+  // ✅ FeedBlock (/feed)
+  Builder.registerComponent(FeedBlock, {
+    name: "FeedBlock",
+    inputs: [
+      { name: "title", type: "string", defaultValue: "Disaster Feed" },
+      { name: "apiBaseUrl", type: "string", defaultValue: "http://localhost:8000" },
+      { name: "pageSize", type: "number", defaultValue: 10 },
+      { name: "defaultTag", type: "string", defaultValue: "" },
+      { name: "defaultPlatform", type: "string", defaultValue: "" },
     ],
   });
 

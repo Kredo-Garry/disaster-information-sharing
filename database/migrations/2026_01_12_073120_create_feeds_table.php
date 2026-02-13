@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('original_url')->nullable();
 
             // 本文
-            $table->text('content');
+            $table->text('content')->nullable();
 
             // タグ
             $table->json('tags')->nullable();

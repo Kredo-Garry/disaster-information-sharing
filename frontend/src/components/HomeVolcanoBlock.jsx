@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 export default function HomeVolcanoBlock({
   apiBaseUrl = "",
-  pageSize = 5,     // ★ 表示は5件
-  fetchLimit = 50,  // ★ 取得は多め（ページング母数）
+  pageSize = 5,
+  fetchLimit = 50,
   title = "Latest PHIVOLCS Volcano Bulletins",
 }) {
   const [items, setItems] = useState([]);
@@ -14,7 +14,8 @@ export default function HomeVolcanoBlock({
 
   const endpoint = useMemo(() => {
     const base = (apiBaseUrl || "").replace(/\/+$/, "");
-    const url = `${base}/api/home-volcano`;
+    // ✅ 正しいURLに修正
+    const url = `${base}/api/home/volcano`;
     const sep = url.includes("?") ? "&" : "?";
     return `${url}${sep}limit=${encodeURIComponent(fetchLimit)}`;
   }, [apiBaseUrl, fetchLimit]);
@@ -45,12 +46,21 @@ export default function HomeVolcanoBlock({
           headers: { Accept: "application/json" },
           signal: controller.signal,
         });
+
         if (!res.ok) {
           const txt = await safeReadText(res);
           throw new Error(`HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
         }
+
         const data = await res.json();
-        const arr = Array.isArray(data?.volcano) ? data.volcano : [];
+
+        // ✅ キー揺れに対応（volcano / volcanoes / items）
+        const arr =
+          (Array.isArray(data?.volcano) && data.volcano) ||
+          (Array.isArray(data?.volcanoes) && data.volcanoes) ||
+          (Array.isArray(data?.items) && data.items) ||
+          [];
+
         setItems(arr);
         setPage(1);
         setStatus("success");
@@ -70,13 +80,12 @@ export default function HomeVolcanoBlock({
         <div>
           <h3 style={styles.title}>{title}</h3>
           <div style={styles.subtle}>
-            Showing {Math.min(pageSize, pageItems.length)} / {items.length || 0} (page {Math.min(page, totalPages)} of{" "}
-            {totalPages})
+            Showing {Math.min(pageSize, pageItems.length)} / {items.length || 0} (page {Math.min(page, totalPages)} of {totalPages})
           </div>
         </div>
       </div>
 
-      {totalPages > 1 ? (
+      {totalPages > 1 && (
         <div style={styles.pagerRow}>
           <button
             type="button"
@@ -100,30 +109,30 @@ export default function HomeVolcanoBlock({
             Next →
           </button>
         </div>
-      ) : null}
+      )}
 
-      {status === "error" ? (
+      {status === "error" && (
         <div style={styles.errorBox}>
           <div style={styles.errorTitle}>Failed to load</div>
           <div style={styles.errorMsg}>{error}</div>
           <div style={styles.hint}>
-            If React is :3000 and Laravel is :8000, set API Base URL to <code>http://localhost:8000</code>.
+            Endpoint: <code>/api/home/volcano</code>
           </div>
         </div>
-      ) : null}
+      )}
 
-      {status === "loading" ? <div style={styles.subtle}>Loading...</div> : null}
+      {status === "loading" && <div style={styles.subtle}>Loading...</div>}
 
-      {status === "success" && items.length === 0 ? (
+      {status === "success" && items.length === 0 && (
         <div style={styles.emptyBox}>
           <div style={styles.emptyTitle}>No volcano bulletin saved yet</div>
           <div style={styles.subtle}>
-            Run: <code>php artisan phivolcs:fetch-volcano-alerts --cafile=/usr/local/etc/ssl/cacert_plus_phivolcs.pem</code>
+            Run: <code>php artisan phivolcs:fetch-volcano-alerts</code>
           </div>
         </div>
-      ) : null}
+      )}
 
-      {status === "success" && items.length > 0 ? (
+      {status === "success" && items.length > 0 && (
         <div style={styles.list}>
           {pageItems.map((x) => (
             <article key={x.id ?? x.hash} style={styles.card}>
@@ -136,17 +145,17 @@ export default function HomeVolcanoBlock({
                 <b>Issued:</b> {x.issued_at ? formatDateTime(x.issued_at) : "—"}
               </div>
 
-              {x.summary_text ? <div style={styles.body}>{String(x.summary_text).slice(0, 320)}</div> : null}
+              {x.summary_text && <div style={styles.body}>{String(x.summary_text).slice(0, 320)}</div>}
 
-              {x.source_url ? (
+              {x.source_url && (
                 <a href={x.source_url} target="_blank" rel="noreferrer" style={styles.link}>
                   Source
                 </a>
-              ) : null}
+              )}
             </article>
           ))}
         </div>
-      ) : null}
+      )}
     </section>
   );
 }
@@ -165,14 +174,17 @@ function formatDateTime(input) {
   const iso = s.includes("T") ? s : s.replace(" ", "T");
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return s;
-  return d.toLocaleString(undefined, {
+
+  return d.toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
+
 
 const styles = {
   wrap: {

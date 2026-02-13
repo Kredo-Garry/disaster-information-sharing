@@ -141,12 +141,54 @@ export default function MyPageBlock({
     }
   }
 
+async function logout() {
+  setErr(null);
+  setLoading(true);
+  try {
+    await api.ensureCsrf();
+    await api.post("/api/logout");
+
+    window.location.href = "http://localhost:8000/";
+  } catch (e) {
+    setErr(e?.response?.data?.message || e.message || "Failed to logout");
+  } finally {
+    setLoading(false);
+  }
+}
+
   const myFamilyId = me?.family_id || "-";
   const myStatus = me?.status || "neutral";
 
   return (
     <div style={{ maxWidth: 980, margin: "0 auto", padding: 24 }}>
-      <h2 style={{ margin: "6px 0 18px", fontSize: 22 }}>{title}</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          margin: "6px 0 18px",
+        }}
+      >
+        <h2 style={{ fontSize: 22, margin: 0 }}>{title}</h2>
+
+        <button
+          onClick={logout}
+          disabled={loading}
+          style={{
+            height: 38,
+            padding: "0 16px",
+            borderRadius: 10,
+            border: "1px solid #D0D5DD",
+            background: "#fff",
+            color: "#344054",
+            fontWeight: 700,
+            cursor: "pointer",
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          ↪ Log Out
+        </button>
+      </div>
 
       {err && (
         <div style={{ marginBottom: 12, padding: 12, borderRadius: 8, background: "#FEE4E2", color: "#7A271A" }}>

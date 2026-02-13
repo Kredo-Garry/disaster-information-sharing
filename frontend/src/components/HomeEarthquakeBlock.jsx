@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * HomeEarthquakeBlock
- * - Laravel側の API: GET /api/home-earthquakes
+ * - Laravel側の API: GET /api/home/earthquakes
  * - 取得した地震データを /home で表示する用コンポーネント
  *
  * 変更点（2026-02-xx）:
@@ -24,7 +24,8 @@ export default function HomeEarthquakeBlock({
 
   const endpoint = useMemo(() => {
     const base = (apiBaseUrl || "").replace(/\/+$/, "");
-    const url = `${base}/api/home-earthquakes`;
+    // ✅ 正しいAPIパスに修正（route:list に合わせる）
+    const url = `${base}/api/home/earthquakes`;
     const sep = url.includes("?") ? "&" : "?";
     return `${url}${sep}limit=${encodeURIComponent(fetchLimit)}`;
   }, [apiBaseUrl, fetchLimit]);
@@ -145,7 +146,7 @@ export default function HomeEarthquakeBlock({
           <div style={styles.errorMsg}>{error}</div>
           <div style={styles.errorHint}>
             Check that Laravel is running at <code>http://localhost:8000</code> and the endpoint{" "}
-            <code>/api/home-earthquakes</code> returns JSON.
+            <code>/api/home/earthquakes</code> returns JSON.
           </div>
         </div>
       ) : null}
@@ -266,15 +267,17 @@ async function safeReadText(res) {
 
 function formatDateTime(input) {
   const s = String(input);
-  const iso = s.includes("T") ? s : s.replace(" ", "T") + (s.endsWith("Z") ? "" : "");
+  const iso = s.includes("T") ? s : s.replace(" ", "T");
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return s;
-  return d.toLocaleString(undefined, {
+
+  return d.toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
 
@@ -297,7 +300,6 @@ const styles = {
     margin: "0 auto",
     padding: "16px 14px",
     boxSizing: "border-box",
-    // 地震：薄い茶色（既に入れている場合はそのまま）
     background: "rgba(150, 75, 0, 0.06)",
     borderRadius: 18,
     marginTop: 8,

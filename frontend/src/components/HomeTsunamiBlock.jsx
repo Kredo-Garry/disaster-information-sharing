@@ -14,7 +14,8 @@ export default function HomeTsunamiBlock({
 
   const endpoint = useMemo(() => {
     const base = (apiBaseUrl || "").replace(/\/+$/, "");
-    const url = `${base}/api/home-tsunami`;
+    // ✅ 正しいAPIパスに修正（route:list に合わせる）
+    const url = `${base}/api/home/tsunami`;
     const sep = url.includes("?") ? "&" : "?";
     return `${url}${sep}limit=${encodeURIComponent(fetchLimit)}`;
   }, [apiBaseUrl, fetchLimit]);
@@ -49,8 +50,16 @@ export default function HomeTsunamiBlock({
           const txt = await safeReadText(res);
           throw new Error(`HTTP ${res.status} ${res.statusText}${txt ? ` - ${txt}` : ""}`);
         }
+
         const data = await res.json();
-        const arr = Array.isArray(data?.tsunami) ? data.tsunami : [];
+
+        // ✅ 返却キーの揺れに強くする（tsunami / tsunamis / items）
+        const arr =
+          (Array.isArray(data?.tsunami) && data.tsunami) ||
+          (Array.isArray(data?.tsunamis) && data.tsunamis) ||
+          (Array.isArray(data?.items) && data.items) ||
+          [];
+
         setItems(arr);
         setPage(1);
         setStatus("success");
@@ -107,7 +116,8 @@ export default function HomeTsunamiBlock({
           <div style={styles.errorTitle}>Failed to load</div>
           <div style={styles.errorMsg}>{error}</div>
           <div style={styles.hint}>
-            If React is :3000 and Laravel is :8000, set API Base URL to <code>http://localhost:8000</code>.
+            If React is :3000 and Laravel is :8000, set API Base URL to <code>http://localhost:8000</code>. Endpoint:{" "}
+            <code>/api/home/tsunami</code>
           </div>
         </div>
       ) : null}
@@ -165,12 +175,14 @@ function formatDateTime(input) {
   const iso = s.includes("T") ? s : s.replace(" ", "T");
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return s;
-  return d.toLocaleString(undefined, {
+
+  return d.toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
 
@@ -180,7 +192,6 @@ const styles = {
     margin: "0 auto",
     padding: "16px 14px",
     boxSizing: "border-box",
-    // 津波：薄い水色（既に入れている場合はそのまま）
     background: "rgba(0, 180, 216, 0.06)",
     borderRadius: 18,
     marginTop: 8,
@@ -216,7 +227,13 @@ const styles = {
     borderRadius: 999,
     color: "inherit",
   },
-  errorBox: { border: "1px solid rgba(220,53,69,0.35)", background: "rgba(220,53,69,0.06)", padding: 12, borderRadius: 14, marginBottom: 12 },
+  errorBox: {
+    border: "1px solid rgba(220,53,69,0.35)",
+    background: "rgba(220,53,69,0.06)",
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 12,
+  },
   errorTitle: { fontWeight: 800, marginBottom: 6 },
   errorMsg: { fontSize: 13, marginBottom: 6 },
   hint: { fontSize: 12, opacity: 0.8 },

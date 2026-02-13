@@ -130,7 +130,7 @@ class MyPageApiController extends Controller
         if (!$familyId || trim($familyId) === '') {
             return response()->json([
                 'members' => [],
-                'notice' => 'Family IDが登録されていない、または、同一のFamily IDが登録されているユーザーが存在しません',
+                'notice' => 'No Family ID is registered, or no users with the same Family ID were found.',
             ]);
         }
 
@@ -154,7 +154,7 @@ class MyPageApiController extends Controller
         return response()->json([
             'members' => $presented,
             'notice' => $presented->isEmpty()
-                ? 'Family IDが登録されていない、または、同一のFamily IDが登録されているユーザーが存在しません'
+                ? 'No Family ID is registered, or no users with the same Family ID were found.'
                 : null,
         ]);
     }
