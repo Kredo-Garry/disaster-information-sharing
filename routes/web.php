@@ -28,7 +28,7 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     $user = Auth::user();
 
-    if ($user->is_admin === 1) {
+    if ($user && $user->is_admin === 1) {
         return redirect()->route('admin.dashboard');
     }
 
@@ -48,24 +48,34 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| MyPage JSON API（web/session認証）
+| MyPage JSON API（React用・session認証）
+|--------------------------------------------------------------------------
+| ※ 未認証時にリダイレクトさせないため、JSONを返す設計
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->prefix('api')->group(function () {
+Route::middleware('auth:web')->prefix('api')->group(function () {
 
     Route::get('/me', [MyPageApiController::class, 'me']);
     Route::patch('/me/status', [MyPageApiController::class, 'updateStatus']);
     Route::patch('/me/family', [MyPageApiController::class, 'updateFamily']);
     Route::get('/family', [MyPageApiController::class, 'family']);
 
-    // React用ログアウト
+    /*
+    |--------------------------------------------------------------------------
+    | React用ログアウト
+    |--------------------------------------------------------------------------
+    */
     Route::post('/logout', function (Request $request) {
-        Auth::logout();
+
+        Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->noContent(); // 204
+        // APIなのでリダイレクトではなくJSONを返す
+        return response()->json([
+            'ok' => true,
+        ]);
     })->name('api.logout');
 });
 
@@ -84,7 +94,6 @@ Route::prefix('admin')
 
         Route::resource('users', UserController::class);
 
-        // ✅ Feedは index / store / destroy を許可
         Route::resource('feeds', AdminFeedController::class)
             ->only(['index', 'store', 'destroy']);
 

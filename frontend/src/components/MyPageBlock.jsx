@@ -141,20 +141,21 @@ export default function MyPageBlock({
     }
   }
 
-async function logout() {
-  setErr(null);
-  setLoading(true);
-  try {
-    await api.ensureCsrf();
-    await api.post("/api/logout");
-
-    window.location.href = "http://localhost:8000/";
-  } catch (e) {
-    setErr(e?.response?.data?.message || e.message || "Failed to logout");
-  } finally {
-    setLoading(false);
+  async function logout() {
+    setErr(null);
+    setLoading(true);
+    try {
+      await api.ensureCsrf();
+      await api.post("/api/logout");
+    } catch (e) {
+      // 失敗しても表示だけして、最後は必ずトップへ戻す
+      setErr(e?.response?.data?.message || e.message || "Failed to logout");
+    } finally {
+      setLoading(false);
+      window.location.href = "http://localhost:8000/";
+    }
   }
-}
+
 
   const myFamilyId = me?.family_id || "-";
   const myStatus = me?.status || "neutral";

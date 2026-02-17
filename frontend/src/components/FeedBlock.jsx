@@ -113,6 +113,7 @@ export default function FeedBlock({
             <option value="volcano">Volcano</option>
             <option value="flood">Flood</option>
             <option value="landslide">Landslide</option>
+            <option value="typhoon">Typhoon</option>
           </select>
 
           <select

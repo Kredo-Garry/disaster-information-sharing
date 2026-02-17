@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // ✅ ログイン後、未ログイン時のリダイレクト先を制御
         $middleware->redirectTo(
-            guests: '/admin/login',
+            guests: '/',
             users: '/admin/dashboard'
         );
 

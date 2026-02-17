@@ -3,17 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\PhivolcsEarthquake;
 
 class HomeEarthquakeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $tz = config('app.timezone'); // 例: Asia/Manila
 
+        $limit = (int) $request->query('limit', 50);
+        $limit = max(1, min($limit, 200));
+
         $items = PhivolcsEarthquake::query()
             ->orderByDesc('occurred_at')
-            ->limit(10)
+            ->limit($limit)
             ->get([
                 'id',
                 'occurred_at',
@@ -24,7 +28,6 @@ class HomeEarthquakeController extends Controller
                 'location_text',
             ])
             ->map(function ($item) use ($tz) {
-                // occurred_at を現地時間に変換して ISO8601(+08:00) で返す
                 $item->occurred_at = $item->occurred_at
                     ? $item->occurred_at->copy()->timezone($tz)->toIso8601String()
                     : null;
